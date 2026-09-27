@@ -9,4 +9,12 @@
 //Game region
 #define CO_G_USE_3D 1
 
+//This should be defined in the CMakeLists.txt file, but this is just incase.
+#ifndef CO_G_SCRIPTING
+#define CO_G_SCRIPTING 1
+
+#warning "CO_G_SCRIPTING is not defined! Defaulting to 1"
+
+#endif
+
 #endif

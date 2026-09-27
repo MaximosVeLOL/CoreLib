@@ -1,7 +1,7 @@
 #ifndef __LIST_H__
 #define __LIST_H__
 
-#include <core/common.hpp>
+#include <core/libapi.hpp>
 
 CORE_DECLARE_NAMESPACE
 

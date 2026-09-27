@@ -9,9 +9,16 @@
 */
 
 #include <core/types.hpp>
-#include <core/common.hpp>
+#include <core/libapi.hpp>
+
+
 
 CORE_DECLARE_NAMESPACE
+
+namespace FileSystem {
+	struct File;
+}
+
 
 template<typename Type, typename Count>
 struct Region {
@@ -61,6 +68,22 @@ struct Region {
 			m_Data[i] = m_Data[i + p_Index];
 		}
 	}
+
+	void Flush(DeleteType p_Type) {
+		switch (p_DeleteType) {
+		case DELETE_DONT:
+			break;
+		case DELETE_OBJECT:
+			delete m_Data;
+			break;
+		case DELETE_ARRAY:
+			delete[] m_Data;
+			break;
+		}
+	}
+
+	virtual void Import(FileSystem::File& p_File) = 0;
+	virtual void Export(FileSystem::File& p_File) = 0;
 
 };
 

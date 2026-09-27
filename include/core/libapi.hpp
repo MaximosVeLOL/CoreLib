@@ -17,4 +17,9 @@
 
 #endif
 
+
+#define CORE_DECLARE_NAMESPACE namespace cl {
+
+#define CORE_END_NAMESPACE }
+
 #endif

@@ -1,7 +1,7 @@
 #ifndef __INPUT_H__
 #define __INPUT_H__
 
-#include <core/common.hpp>
+#include <core/libapi.hpp>
 #include <core/types.hpp>
 #include <core/comp/base.hpp>
 #include <GLFW/glfw3.h>

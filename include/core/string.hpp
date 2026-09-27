@@ -1,8 +1,10 @@
 #ifndef __STRING_H__
 #define __STRING_H__
 
-#include <core/common.hpp>
+#include <core/libapi.hpp>
 #include <core/list.hpp>
+#include <format>
+
 
 CORE_DECLARE_NAMESPACE
 
@@ -18,6 +20,9 @@ public:
 
 	void operator+=(const char* p_String) {
 		_extend(GetLength(p_String) + 1, const_cast<char*>(p_String));
+	}
+
+	void operator+=(char p_Char) {
 	}
 
 	static strsize_t GetLength(const char* p_String) {
@@ -36,6 +41,13 @@ public:
 		return ret;
 	}
 
+	template<typename... Args>
+	static const char* MakeCharArrayFromFormat(std::format_string<Args...> p_Format, Args... p_Args) {
+		std::string format = std::format(p_Format, p_Args...);
+		const char* str = format.c_str();
+		return str;
+	}
+
 	void operator=(const char* p_String) {
 		delete[] m_Data;
 		m_Data = MakeCharArrayFromConstChar(p_String, &m_Count);
@@ -49,6 +61,22 @@ public:
 
 	operator char* () {
 		return m_Data;
+	}
+};
+struct CCharArrayWrapper {
+	const char* m_Data = nullptr;
+	strsize_t m_Length = 0;
+	bool m_IsConst = true;
+
+	CCharArrayWrapper(const char* p_Data) {
+		m_Data = p_Data;
+		m_Length = CString::GetLength(p_Data);
+		m_IsConst = true;
+	}
+	CCharArrayWrapper(char* p_Data) {
+		m_Data = p_Data;
+		m_Length = CString::GetLength(p_Data);
+		m_IsConst = false;
 	}
 };
 

@@ -2,7 +2,7 @@
 #define __RENDERER_H__
 
 #include <core/types.hpp>
-#include <core/common.hpp>
+#include <core/libapi.hpp>
 #include <core/comp/base.hpp>
 #include <core/game/rect.hpp>
 

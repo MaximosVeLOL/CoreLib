@@ -9,7 +9,7 @@
 */
 
 #include <core/types.hpp>
-#include <core/common.hpp>
+#include <core/libapi.hpp>
 
 #define USE_CPP_FILEAPI 1
 
@@ -53,7 +53,7 @@ namespace FileSystem {
 			if (p_OpenMode & F_OPEN_IMPORT) {
 				//Already set
 			}
-			else if (pOpenMode & F_OPEN_EXPORT) {
+			else if (p_OpenMode & F_OPEN_EXPORT) {
 				mode |= m_Stream.out;
 			}
 			if (p_OpenMode & F_OPEN_BINARY) {
@@ -133,11 +133,11 @@ namespace FileSystem {
 			m_Stream.close();
 			m_Size = 0;
 		}
-		File() {}
-		File(char* p_Directory, OpenMode p_OpenMode) {
+		CFile() {}
+		CFile(const char* p_Directory, OpenMode p_OpenMode) {
 			Open(p_Directory, p_OpenMode);
 		}
-		~File() {
+		~CFile() {
 			Close();
 		}
 	};
