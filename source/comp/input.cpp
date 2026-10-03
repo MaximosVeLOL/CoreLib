@@ -22,10 +22,6 @@ namespace Input {
 	CState* getStateFromScancode(int p_Scancode) {
 		return nullptr;
 	}
-
-	void GLFW_KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-
-	}
 }
 
 CORE_END_NAMESPACE

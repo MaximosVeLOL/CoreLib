@@ -11,7 +11,9 @@ CORE_DECLARE_NAMESPACE
 
 using strsize_t = unsigned __int16;
 
-class CString : public CList<char, strsize_t> {
+constexpr strsize_t STRING_INVALID = 65535;
+
+class CORE_API CString : public CList<char, strsize_t> {
 private:
 	void _setString() {
 

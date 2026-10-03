@@ -16,12 +16,14 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>")
 set(CORE_USE_SCRIPTS ON)
 
 add_subdirectory(vendored/glad)
-add_subdirectory(vendored/glfw)
+add_subdirectory(vendored/SDL)
 
 project ("CoreLib")
 
 
-
+if(EMSCRIPTEN)
+  set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
+endif()
 
 # Add source to this project's executable.
 add_executable (CoreLib "source/test.cpp" "source/comp/input.cpp" "source/comp/renderer.cpp")
@@ -38,7 +40,7 @@ endif()
 target_include_directories(CoreLib PUBLIC include)
 
 target_link_libraries(CoreLib PRIVATE glad)
-target_link_libraries(CoreLib PRIVATE glfw)
+target_link_libraries(CoreLib PRIVATE SDL3)
 target_link_libraries(CoreLib PRIVATE angelscript)
 	
 	

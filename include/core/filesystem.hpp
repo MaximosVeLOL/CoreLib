@@ -11,7 +11,7 @@
 #include <core/types.hpp>
 #include <core/libapi.hpp>
 
-#define USE_CPP_FILEAPI 1
+#define USE_CPP_FILEAPI 0
 
 #if USE_CPP_FILEAPI
 #include <fstream>
@@ -19,9 +19,73 @@
 #include <stdio.h>
 #endif
 
+#include <core/string.hpp>
+
 CORE_DECLARE_NAMESPACE
 
 namespace FileSystem {
+
+	class CPath {
+	private:
+		strsize_t _find(char p_Target) {
+			for (s32 i = static_cast<s32>(m_Length); i >= 0;i--) {
+				if (m_Path[i] == p_Target)
+					return static_cast<strsize_t>(i);
+			}
+			return STRING_INVALID;
+		}
+		/*
+		strsize_t _getExtensionIndex() {
+			//A regular file can be this: "./.gitignore"
+			//So we have to go from the end to the start to solve for the extension
+			//The extension is also the last dot at the end, so that makes even more sense
+
+		}
+		strsize_t _getParentFolderIndex() {
+			for (s32 i = static_cast<s32>(m_Length); i >= 0;i--) {
+				if (m_Path[i] == '/') {
+					return static_cast<strsize_t>(i);
+				}
+			}
+		}
+		*/
+	public:
+		const char* m_Path = nullptr;
+		strsize_t m_Length = 0;
+
+		const char* ParentFolder() {
+			strsize_t folderIndex = _find('/');
+			if (folderIndex == STRING_INVALID) folderIndex = _find('\\');
+			if (folderIndex == STRING_INVALID) return nullptr;
+			return static_cast<const char*>(m_Path + folderIndex);
+		}
+
+		const char* Extension() {
+			strsize_t extIndex = _find('.');
+			if (extIndex == STRING_INVALID) return nullptr;
+			return static_cast<const char*>(m_Path + extIndex);
+		}
+		char* FileName() {
+			strsize_t parentFolder = _find('/');
+			//If there is no folder "name.ext", then assume the filename starts at 0
+			if (parentFolder == STRING_INVALID) parentFolder = 0;
+			strsize_t extIndex = _find('.');
+			//Assume the path is "filename"
+			if (extIndex == STRING_INVALID) extIndex = m_Length;
+			char* ret = new char[(extIndex - parentFolder) + 1] {'\0'};
+			for (strsize_t i = parentFolder + 1; i < extIndex;i++) {
+				ret[i - (parentFolder + 1)] = m_Path[i];
+			}
+			return ret;
+		}
+
+		bool IsFolder() {
+			//I think we should have all folder paths as "C:\path\" but we also need to consider "C:\path"
+			//The thing is it is impossible to determine if it's a file or folder.
+			//I think its best to put it on the user, as the user knows if it is a file or folder
+			return (m_Path[m_Length] == '/' || m_Path[m_Length] == '\\');
+		}
+	};
 
 	//In order to distinguish gamepaths from real paths, here is a simple solution
 	//Check the first char at the start and check if it is 'C'
@@ -143,13 +207,96 @@ namespace FileSystem {
 	};
 #else
 
-	class CFile {
-	private:
-		fsize_t m_Size = 0;
+class CFile {
+private:
+	fsize_t m_Size = 0;
+	FILE* m_Stream = nullptr;
+public:
+	void Open(const char* p_Directory, OpenMode p_OpenMode = F_OPEN_IMPORT) {
+		char openMode[2] = "!!";
+		u8 openIndex = 0;
+		if (p_OpenMode & F_OPEN_BINARY) {
+			openMode[0] = 'b';
+			openIndex++;
+		}
+		else if (p_OpenMode & F_OPEN_TEXT) {
+			//Already set & impossibe to set
+		}
+		if (p_OpenMode & F_OPEN_IMPORT) {
+			openMode[openIndex] = 'r';
+		}
+		else if (p_OpenMode & F_OPEN_EXPORT) {
+			openMode[openIndex] = 'w';
+		}
 
-	public:
+		fopen_s(&m_Stream, p_Directory, openMode);
+		if (p_OpenMode & F_OPEN_IMPORT) {
+			fseek(m_Stream, 0, SEEK_END);
+			m_Size = static_cast<fsize_t>(ftell(m_Stream));
+			//rewind(m_Stream);
+			fseek(m_Stream, 0, SEEK_SET);
+		}
 
-	};
+	}
+
+	//Utilities
+	fsize_t GetSize() {
+		return m_Size;
+	}
+	bool IsOpen() {
+		return static_cast<bool>(m_Stream); //Returns false if m_Stream is nullptr
+	}
+
+	//Reading
+	template<typename T>
+	T Read() {
+		T ret = T();
+		//char* ret = new char[sizeof(T)];
+		fread_s(reinterpret_cast<void*>(&ret), sizeof(T), sizeof(T), 1, m_Stream);
+		return ret;
+	}
+	u8* Read(fsize_t p_Amount) {
+		u8* ret = new u8[p_Amount];
+		fread_s(reinterpret_cast<void*>(&ret), p_Amount, p_Amount, 1, m_Stream);
+		return ret;
+	}
+	char* ReadText(fsize_t p_Amount) {
+		char* ret = new char[p_Amount + 1];
+		fread_s(reinterpret_cast<void*>(&ret), p_Amount, p_Amount, 1, m_Stream);
+		ret[p_Amount] = '\0';
+		return ret;
+	}
+
+	//Writing
+	template<typename T>
+	void Write(T p_Value) {
+		m_Stream.write(reinterpret_cast<char*>(&p_Value), sizeof(T));
+	}
+	void Write(void* p_Value, fsize_t p_Size) {
+		m_Stream.write(reinterpret_cast<const char*>(p_Value), p_Size);
+	}
+
+	fsize_t Tell() {
+		return static_cast<fsize_t>(ftell(m_Stream));
+	}
+	void Seek(fsize_t p_Offset, SeekBase p_Base) {
+		//Since SeekBase matches the SEEK_ defines in stdio.h, we can use them here instead of converting them.
+		fseek(m_Stream, p_Offset, p_Base);
+	}
+	void Close() {
+		fflush(m_Stream);
+		fclose(m_Stream);
+		m_Stream = nullptr;
+		m_Size = 0;
+	}
+	CFile() {}
+	CFile(const char* p_Directory, OpenMode p_OpenMode) {
+		Open(p_Directory, p_OpenMode);
+	}
+	~CFile() {
+		Close();
+	}
+};
 #endif
 }
 

@@ -2,10 +2,9 @@
 #define __REGION_H__
 
 /* Region
-* A region is a dynamic array,
-* With a count, a max value, and an array of type
-* Includes custom stuff for importing and exporting
-* I needed this for my projects, so here it is here!
+* A region is a fixed list meant to store data
+* that can be added or removed
+* 
 */
 
 #include <core/types.hpp>
@@ -16,31 +15,35 @@
 CORE_DECLARE_NAMESPACE
 
 namespace FileSystem {
-	struct File;
+	struct CFile;
 }
 
 
 template<typename Type, typename Count>
-struct Region {
+struct CRegion {
 	Type* m_Data = nullptr;
 	Count m_Count = 0;
 	Count m_Max = 0;
 
-	enum EventType : u8 {
+	enum EEventType : u8 {
 		E_ADD_ADDSTART = 0,
 		E_ADD_LIMIT,
 		E_ADD_ADDEND,
+		E_DELETE_START,
+		E_DELETE_ELEMENT_OBJECT,
+		E_DELETE_ELEMENT_ARRAY,
+		E_DELETE_END
 	};
 
-	virtual bool AddEvent(EventType p_EventType, Type* p_Element) {}
+	virtual bool OnEvent(EEventType p_EEventType, Type* p_Element) {}
 
 	void Add(Type p_Element) {
 		AddEvent(E_ADD_ADDSTART, &p_Element);
 		if (m_Count + 1 >= m_Max) {
-			AddEvent(E_ADD_LIMIT);
+			OnEvent(E_ADD_LIMIT, nullptr);
 		}
 		m_Data[m_Count++] = p_Element;
-		AddEvent(E_ADD_ADDEND, &p_Element);
+		OnEvent(E_ADD_ADDEND, &p_Element);
 	}
 
 	enum DeleteType : u8 {
@@ -57,15 +60,19 @@ struct Region {
 		case DELETE_DONT:
 			break;
 		case DELETE_OBJECT:
+			OnEvent(E_DELETE_ELEMENT_OBJECT, m_Data[p_Index]);
 			delete m_Data[p_Index];
 			break;
 		case DELETE_ARRAY:
+			OnEvent(E_DELETE_ELEMENT_ARRAY, m_Data[p_Index]);
 			delete[] m_Data[p_Index];
+
 			break;
 		}
+		m_Count -= p_Amount;
 		if (!p_PushOthers) return;
-		for (u8 i = 0 p_Index;i < m_Count;i++) {
-			m_Data[i] = m_Data[i + p_Index];
+		for (u8 i = p_Index;i < m_Count;i++) {
+			m_Data[i] = m_Data[i + p_Amount];
 		}
 	}
 
@@ -82,8 +89,8 @@ struct Region {
 		}
 	}
 
-	virtual void Import(FileSystem::File& p_File) = 0;
-	virtual void Export(FileSystem::File& p_File) = 0;
+	virtual void Import(FileSystem::CFile& p_File) = 0;
+	virtual void Export(FileSystem::CFile& p_File) = 0;
 
 };
 

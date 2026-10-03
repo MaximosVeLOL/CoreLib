@@ -6,7 +6,7 @@
 CORE_DECLARE_NAMESPACE
 
 template<typename Type, typename Count>
-class CList {
+class CORE_API CList {
 private:
 
 protected:
@@ -24,7 +24,10 @@ protected:
 	}
 
 	void _extend(unsigned __int8 p_ElementCount, Type* p_NewElements = nullptr) {
-		if (_checkNull()) return;
+		if (_checkNull()) {
+			m_Data = p_NewElements;
+			m_Count = static_cast<Count>(p_ElementCount);
+		}
 		Type* output = new Type[m_Count + p_ElementCount];
 		Count i = 0;
 		for (; i < m_Count;i++) {
