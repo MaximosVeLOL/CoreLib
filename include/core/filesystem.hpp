@@ -11,29 +11,24 @@
 #include <core/types.hpp>
 #include <core/libapi.hpp>
 
-#define USE_CPP_FILEAPI 0
-
-#if USE_CPP_FILEAPI
-#include <fstream>
-#else
-#include <stdio.h>
-#endif
-
 #include <core/string.hpp>
+
+#include <core/memory.hpp>
+#include <core/platform.hpp>
+
+#if CORE_PLATFORM_MODERN
+struct SDL_IOStream;
+#endif
 
 CORE_DECLARE_NAMESPACE
 
 namespace FileSystem {
-
-	class CPath {
+	//A path, can be a asset directory path or a real (binary) directory.
+	//This should only be used when you need basic utilities or don't know
+	//The type a path is.
+	class CORE_API CPath {
 	private:
-		strsize_t _find(char p_Target) {
-			for (s32 i = static_cast<s32>(m_Length); i >= 0;i--) {
-				if (m_Path[i] == p_Target)
-					return static_cast<strsize_t>(i);
-			}
-			return STRING_INVALID;
-		}
+		strsize_t _find(char p_Target);
 		/*
 		strsize_t _getExtensionIndex() {
 			//A regular file can be this: "./.gitignore"
@@ -52,6 +47,11 @@ namespace FileSystem {
 	public:
 		const char* m_Path = nullptr;
 		strsize_t m_Length = 0;
+
+		static char* GetCurrentDirectory();
+
+		static const char* GetBaseDirectory();
+
 
 		const char* ParentFolder() {
 			strsize_t folderIndex = _find('/');
@@ -79,11 +79,71 @@ namespace FileSystem {
 			return ret;
 		}
 
-		bool IsFolder() {
-			//I think we should have all folder paths as "C:\path\" but we also need to consider "C:\path"
-			//The thing is it is impossible to determine if it's a file or folder.
-			//I think its best to put it on the user, as the user knows if it is a file or folder
-			return (m_Path[m_Length] == '/' || m_Path[m_Length] == '\\');
+		bool IsFolder();
+		bool IsFile();
+
+		bool IsRealPath() {
+			return (m_Path[0] == 'C');
+		}
+		bool IsGameAssetPath() {
+			return (m_Path[0] != 'C');
+		}
+
+
+		//Converts game asset paths (sys/INPUTS to real paths C:\game\assets\sys\INPUTS)
+		char* AsRealPath() {
+			if (IsRealPath()) {
+				//Just a little hack here!
+				char* ret = new char[m_Length + 1] {'\0'};
+				Mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
+				return ret; 
+			}
+
+			const char* baseDir = GetBaseDirectory();
+			strsize_t baseDirLen = String::FindLength(baseDir);
+			char* ret = new char[baseDirLen + m_Length + 8 + 1] {'\0'};
+			strsize_t i = 0;
+			for (; i < baseDirLen;i++) {
+				ret[i] = baseDir[i];
+			}
+			ret[baseDirLen] = '/';
+			ret[baseDirLen + 1] = 'a';
+			ret[baseDirLen + 2] = 's';
+			ret[baseDirLen + 3] = 's';
+			ret[baseDirLen + 4] = 'e';
+			ret[baseDirLen + 5] = 't';
+			ret[baseDirLen + 6] = 's';
+			ret[baseDirLen + 7] = '/';
+			for (i = 0; i < m_Length;i++) {
+				ret[baseDirLen + 8 + i] = m_Path[i];
+			}
+			return ret;
+			//return CString::MakeCharArrayFromFormat("{}/assets/{}", GetBaseDirectory(), m_Path);
+		}
+		char* AsGamePath() {
+			if (IsGameAssetPath()) {
+				//Just a little hack here! (x2)
+				char* ret = new char[m_Length + 1] {'\0'};
+				Mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
+				return ret;
+			}
+			throw("Implement!");
+			strsize_t baseIndex = 0;
+			const char* baseDir = GetBaseDirectory();
+			strsize_t len = String::FindLength(baseDir);
+			for (strsize_t i = 0; i < m_Length;i++) {
+				if (m_Path[i] == baseDir[baseIndex]) {
+					if (++baseIndex >= len) {
+						//We found the beginning index!
+					}
+				}
+			}
+		}
+
+		CPath(const char* p_Directory) : m_Path(p_Directory) {
+			m_Length = String::FindLength(p_Directory);
+		}
+		~CPath() {
 		}
 	};
 
@@ -91,13 +151,9 @@ namespace FileSystem {
 	//Check the first char at the start and check if it is 'C'
 	//But what if other paths don't include it?
 	//I guess we can check if it isn't capital?s
-
-	enum OpenMode : u8 {
-		F_OPEN_IMPORT = 0 << 0,
-		F_OPEN_EXPORT = 1 << 0,
-
-		F_OPEN_BINARY = 0 << 1,
-		F_OPEN_TEXT = 1 << 1,
+	struct EOpenMode {
+		bool doImport : 4 = 0;
+		bool doText : 4 = 0;
 	};
 	enum SeekBase : u8 {
 		F_SEEK_START = 0,
@@ -106,145 +162,19 @@ namespace FileSystem {
 	};
 
 	using fsize_t = u32;
-#if USE_CPP_FILEAPI
-	class CFile {
-	private:
-		fsize_t m_Size = 0;
-		std::fstream m_Stream;
-	public:
-		void Open(const char* p_Directory, OpenMode p_OpenMode = F_OPEN_IMPORT) {
-			std::ios_base::openmode mode = m_Stream.in;
-			if (p_OpenMode & F_OPEN_IMPORT) {
-				//Already set
-			}
-			else if (p_OpenMode & F_OPEN_EXPORT) {
-				mode |= m_Stream.out;
-			}
-			if (p_OpenMode & F_OPEN_BINARY) {
-				mode |= m_Stream.binary;
-			}
-			else if (p_OpenMode & F_OPEN_TEXT) {
-				//Already set & impossibe to set
-			}
-			m_Stream.open(p_Directory, mode);
-			if (p_OpenMode & F_OPEN_IMPORT) {
-				m_Stream.seekg(0, m_Stream.end);
-				m_Size = static_cast<fsize_t>(m_Stream.tellg());
-				m_Stream.seekg(0, m_Stream.beg);
-			}
 
-		}
-
-		//Utilities
-		fsize_t GetSize() {
-			return m_Size;
-		}
-		bool IsOpen() {
-			return m_Stream.is_open();
-		}
-
-		//Reading
-		template<typename T>
-		T Read() {
-			T ret = T();
-			//char* ret = new char[sizeof(T)];
-			m_Stream.read(reinterpret_cast<char*>(ret), sizeof(T));
-			return ret;
-		}
-		u8* Read(fsize_t p_Amount) {
-			u8* ret = new u8[p_Amount];
-			m_Stream.read(reinterpret_cast<char*>(ret), p_Amount);
-			return ret;
-		}
-		char* ReadText(fsize_t p_Amount) {
-			char* ret = new char[p_Amount + 1];
-			m_Stream.read(ret, p_Amount);
-			ret[p_Amount] = '\0';
-			return ret;
-		}
-
-		//Writing
-		template<typename T>
-		void Write(T p_Value) {
-			m_Stream.write(reinterpret_cast<char*>(&p_Value), sizeof(T));
-		}
-		void Write(void* p_Value, fsize_t p_Size) {
-			m_Stream.write(reinterpret_cast<const char*>(p_Value), p_Size);
-		}
-
-		size_t Tell() {
-			return static_cast<size_t>(m_Stream.tellg());
-		}
-		void Seek(size_t p_Offset, SeekBase p_Base) {
-			std::ios_base::seekdir dir;
-			switch (p_Base) {
-			case F_SEEK_START:
-				dir = m_Stream.beg;
-				break;
-
-			case F_SEEK_CURRENT:
-				dir = m_Stream.cur;
-				break;
-
-			case F_SEEK_END:
-				dir = m_Stream.end;
-				break;
-			}
-			m_Stream.seekg(p_Offset, dir);
-		}
-		void Close() {
-			m_Stream.flush();
-			m_Stream.close();
-			m_Size = 0;
-		}
-		CFile() {}
-		CFile(const char* p_Directory, OpenMode p_OpenMode) {
-			Open(p_Directory, p_OpenMode);
-		}
-		~CFile() {
-			Close();
-		}
-	};
-#else
-
-class CFile {
+class CORE_API CFile {
 private:
 	fsize_t m_Size = 0;
-	FILE* m_Stream = nullptr;
+	SDL_IOStream* m_Stream = nullptr;
 public:
-	void Open(const char* p_Directory, OpenMode p_OpenMode = F_OPEN_IMPORT) {
-		char openMode[2] = "!!";
-		u8 openIndex = 0;
-		if (p_OpenMode & F_OPEN_BINARY) {
-			openMode[0] = 'b';
-			openIndex++;
-		}
-		else if (p_OpenMode & F_OPEN_TEXT) {
-			//Already set & impossibe to set
-		}
-		if (p_OpenMode & F_OPEN_IMPORT) {
-			openMode[openIndex] = 'r';
-		}
-		else if (p_OpenMode & F_OPEN_EXPORT) {
-			openMode[openIndex] = 'w';
-		}
-
-		fopen_s(&m_Stream, p_Directory, openMode);
-		if (p_OpenMode & F_OPEN_IMPORT) {
-			fseek(m_Stream, 0, SEEK_END);
-			m_Size = static_cast<fsize_t>(ftell(m_Stream));
-			//rewind(m_Stream);
-			fseek(m_Stream, 0, SEEK_SET);
-		}
-
-	}
+	void Open(const char* p_Directory, EOpenMode p_OpenMode = { true, true });
 
 	//Utilities
-	fsize_t GetSize() {
-		return m_Size;
-	}
-	bool IsOpen() {
-		return static_cast<bool>(m_Stream); //Returns false if m_Stream is nullptr
+	fsize_t GetSize();
+	bool IsOpen();
+	SDL_IOStream* GetStream() {
+		return m_Stream;
 	}
 
 	//Reading
@@ -252,53 +182,40 @@ public:
 	T Read() {
 		T ret = T();
 		//char* ret = new char[sizeof(T)];
-		fread_s(reinterpret_cast<void*>(&ret), sizeof(T), sizeof(T), 1, m_Stream);
+		ReadTo(static_cast<void*>(&ret), sizeof(T)); //Smart hack?
 		return ret;
 	}
-	u8* Read(fsize_t p_Amount) {
-		u8* ret = new u8[p_Amount];
-		fread_s(reinterpret_cast<void*>(&ret), p_Amount, p_Amount, 1, m_Stream);
-		return ret;
-	}
-	char* ReadText(fsize_t p_Amount) {
-		char* ret = new char[p_Amount + 1];
-		fread_s(reinterpret_cast<void*>(&ret), p_Amount, p_Amount, 1, m_Stream);
-		ret[p_Amount] = '\0';
-		return ret;
-	}
+	u8* Read(fsize_t p_Amount);
+	void ReadTo(void* p_Data, fsize_t p_Amount);
+	char* ReadText(fsize_t p_Amount);
 
 	//Writing
 	template<typename T>
 	void Write(T p_Value) {
-		m_Stream.write(reinterpret_cast<char*>(&p_Value), sizeof(T));
+		Write(static_cast<void*>(&p_Value), sizeof(p_Value));
+		//SDL_WriteIO(m_Stream, reinterpret_cast<void*>(&p_Value), sizeof(T));
 	}
-	void Write(void* p_Value, fsize_t p_Size) {
-		m_Stream.write(reinterpret_cast<const char*>(p_Value), p_Size);
-	}
+	void Write(void* p_Value, fsize_t p_Size);
 
-	fsize_t Tell() {
-		return static_cast<fsize_t>(ftell(m_Stream));
-	}
-	void Seek(fsize_t p_Offset, SeekBase p_Base) {
-		//Since SeekBase matches the SEEK_ defines in stdio.h, we can use them here instead of converting them.
-		fseek(m_Stream, p_Offset, p_Base);
-	}
-	void Close() {
-		fflush(m_Stream);
-		fclose(m_Stream);
-		m_Stream = nullptr;
-		m_Size = 0;
-	}
+	fsize_t Tell();
+	void Seek(fsize_t p_Offset, SeekBase p_Base);
+	void Close();
 	CFile() {}
-	CFile(const char* p_Directory, OpenMode p_OpenMode) {
+	CFile(const char* p_Directory, EOpenMode p_OpenMode = {true, true}) {
 		Open(p_Directory, p_OpenMode);
 	}
 	~CFile() {
-		Close();
+		//Close();
 	}
 };
-#endif
+
+namespace Utility {
+	CORE_API extern bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(const CPath& p_Current));
+
+	CORE_API extern bool CreateFolder(CPath p_Path);
 }
+
+} //End of filesystem namespace
 
 CORE_END_NAMESPACE
 

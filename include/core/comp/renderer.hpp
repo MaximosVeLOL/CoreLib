@@ -5,14 +5,23 @@
 #include <core/libapi.hpp>
 #include <core/comp/base.hpp>
 #include <core/game/rect.hpp>
-
+#include <core/game/vector.hpp>
+#include <core/platform.hpp>
+#include <core/memory.hpp>
+//#if CORE_PLATFORM == PLATFORM_SDLSUPPORTED
+//#include <SDL3/SDL.h> //For SDL_Texture data stuff
+//#endif
 /* Renderer System
 * Use the Renderer namespace for the system stuff
 * Use the Render namespace to actually render things to the screen
 
 */
-
-struct GLFWwindow;
+#if 1
+struct SDL_Window;
+struct SDL_Renderer;
+struct SDL_Color;
+struct SDL_Texture;
+#endif
 
 CORE_DECLARE_NAMESPACE
 
@@ -22,17 +31,19 @@ using scrsize_t = u16;
 
 constexpr scrsize_t SCREEN_WIDTH = 960;
 constexpr scrsize_t SCREEN_HEIGHT = 540;
+inline const char* APP_NAME = "Application";
 
 
 
-CORE_API extern GLFWwindow* gWindow;
+CORE_API extern SDL_Window* g_Window;
+CORE_API extern SDL_Renderer* g_Renderer;
 
 COMPONENT_DECLARE_INIT();
 
-COMPONENT_DECLARE_UPDATE();
+//COMPONENT_DECLARE_UPDATE();
 
 COMPONENT_DECLARE_UNLOAD();
-
+/*
 struct CFloatColor {
 	float r = 0;
 	float g = 0;
@@ -47,31 +58,91 @@ struct CFloatColor {
 
 	}
 };
-/*
+*/
+
 struct CColor {
 	u8 r = 0;
 	u8 g = 0;
 	u8 b = 0;
 	u8 a = 0;
+#if CORE_PLATFORM == PLATFORM_SDLSUPPORTED
+	operator SDL_Color();
 	//operator CFloatColor() {
 	//	return CFloatColor{ static_cast<float>(r / 255), static_cast<float>(g / 255), static_cast<float>(b / 255), static_cast<float>(a / 255) };
 	//}
+#endif
 };
-*/
+
+struct CORE_API CTexture {
+	//Can either be one of the following:
+	// A SDL_Texture or SDL_Surface (modern platforms)
+	//
+	void* m_Data = nullptr;
+#if CORE_PLATFORM == PLATFORM_SDLSUPPORTED
+	template<typename T = u32>
+	T GetWidth() {
+		return static_cast<T>(As_SDLTexture()->w);
+	}
+	template<typename T = u32>
+	T GetHeight() {
+		return static_cast<T>(As_SDLTexture()->h);
+	}
+	
+	SDL_Texture* As_SDLTexture();
+#else
+	template<typename T = u32>
+	T GetWidth() {
+#error Implement this!
+	}
+#endif
+
+	void Destroy();
+
+	CTexture(){}
+	CTexture(void* p_Data) : m_Data(p_Data) {}
+};
+/*
 struct CObject {
 	
 	float* vertices = nullptr;
 	float* indices = nullptr;
 };
-
-using CRenderRect = CRectTemplate<signed __int16, signed __int16>;
+*/
+struct CRenderRect : CRectTemplate<s16, s16> {
+	CRenderRect() {}
+	CRenderRect(const CRect& p_Other) {
+		x = static_cast<s16>(p_Other.x);
+		y = static_cast<s16>(p_Other.y);
+		width = static_cast<s16>(p_Other.width);
+		height = static_cast<s16>(p_Other.height);
+	}
+	CRenderRect(s16 p_X, s16 p_Y, s16 p_W, s16 p_H) {
+		x = p_X;
+		y = p_Y;
+		width = p_W;
+		height = p_H;
+	}
+};
+using CRenderVector = CVectorTemplate<s16>;
 
 COMPONENT_DEFINE_END
 
+class CString;
+
 namespace Render {
-	CORE_API extern void SetColor(Renderer::CFloatColor p_Color);
+	CORE_API extern void Clear();
+	CORE_API extern void SetColor(Renderer::CColor p_Color);
 	CORE_API extern void Rect(Renderer::CRenderRect p_Rect);
-	CORE_API extern void Rect(Renderer::CRenderRect p_Rect, Renderer::CFloatColor p_Color);
+	CORE_API extern void Rect(Renderer::CRenderRect p_Rect, Renderer::CColor p_Color);
+	CORE_API extern void FillRect(Renderer::CRenderRect p_Rect, Renderer::CColor p_Color);
+	CORE_API extern void FillRect(Renderer::CRenderRect p_Rect, Renderer::CColor p_Color);
+	CORE_API extern void Present();
+	//static_assert(sizeof(strsize_t) == sizeof(unsigned __int16), "Please update strsize_t in Render::Text()!");
+	CORE_API extern Renderer::CTexture CreateTextureFromText(const char* p_Text, unsigned __int16 p_Length, Renderer::CColor p_Foreground = { 0xFF, 0xFF, 0xFF, 0xFF }, Renderer::CColor p_Background = {0, 0, 0, 0xFF});
+	CORE_API extern void Text(Renderer::CRenderVector p_Position, const char* p_Text, unsigned __int16 p_Length, Renderer::CColor p_Foreground = { 0xFF, 0xFF, 0xFF, 0xFF }, Renderer::CColor p_Background = { 0, 0, 0, 0xFF });
+	CORE_API extern void Text(Renderer::CRenderVector p_Position, CString p_String, Renderer::CColor p_Foreground = { 0xFF, 0xFF, 0xFF, 0xFF }, Renderer::CColor p_Background = { 0, 0, 0, 0 });
+	CORE_API extern void Texture(Renderer::CTexture& p_Texture, Renderer::CRenderRect p_Rect);
+	CORE_API extern void Texture(Renderer::CTexture& p_Texture, Renderer::CRenderRect p_Rect, Renderer::CRenderRect p_Part);
 }
 
 

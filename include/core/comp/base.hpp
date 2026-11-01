@@ -42,9 +42,10 @@
 #define COMPONENT_DEFINE_END }
 
 
-#define COMPONENT_CALL_INIT(name) cl::name::Init()
-#define COMPONENT_CALL_INIT(name, onFail) if(!cl::name::Init()) onFail
-#define COMPONENT_CALL_UPDATE(name) cl::name::Update()
-#define COMPONENT_CALL_UNLOAD(name) cl::name::Update()
+//#define COMPONENT_CALL_INIT(name) cl::name::Init()
+#define COMPONENT_CALL_INIT(name, onFail) if(!name::Init()) onFail
+#define COMPONENT_CALL_INIT_NOFAIL(name) name::Init()
+#define COMPONENT_CALL_UPDATE(name) name::Update()
+#define COMPONENT_CALL_UNLOAD(name) name::Unload()
 
 #endif

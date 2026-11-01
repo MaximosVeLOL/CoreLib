@@ -1,0 +1,15 @@
+bindings {
+
+	up(Up, dpup)
+	down(Down, dpdown)
+	left(Left, dpleft)
+	right(Right, dpright)
+	
+	jump(Space, a)
+
+}
+
+axises {
+	horizontal(right, left)
+	vertical(down, up)
+}
