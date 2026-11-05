@@ -1,5 +1,6 @@
 #include <core/filesystem.hpp>
 #include <filesystem>
+#include <string>
 #include <SDL3/SDL.h>
 
 namespace fs = std::filesystem;
@@ -127,12 +128,19 @@ namespace FileSystem {
 		m_Size = 0;
 	}
 
+	CFile::~CFile() {
+		//Close();
+		if (!m_Stream)
+			return;
+		LogWarning("(cl::FileSystem::~CFile) Warning! file at directory ({}) wasn't closed!", "todoremoveme");
+	}
+
 
 
 #pragma endregion
 
 	namespace Utility {
-		bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(const CPath& p_Current)) {
+		bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(CPath& p_Current)) {
 			char* asRaw = p_Path.AsRealPath();
 			if (!asRaw) {
 				throw Error::CRuntime("asd");
@@ -163,6 +171,18 @@ namespace FileSystem {
 			delete[] real;
 #endif
 			return true;
+		}
+		char* OpenFileAndReadAll(CPath p_Path, strsize_t& p_OutSize) {
+			char* asReal = p_Path.AsRealPath();
+			FileSystem::CFile file(asReal);
+			if (!file.IsOpen()) {
+				delete[] asReal;
+				return nullptr;
+			}
+			char* data = new char[file.GetSize() + 1] {'\0'};
+			file.ReadTo(data, file.GetSize());
+			p_OutSize = file.GetSize();
+			return data;
 		}
 	}
 

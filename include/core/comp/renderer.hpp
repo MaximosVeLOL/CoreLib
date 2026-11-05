@@ -96,6 +96,10 @@ struct CORE_API CTexture {
 	}
 #endif
 
+	bool IsValid() {
+		return static_cast<bool>(m_Data);
+	}
+
 	void Destroy();
 
 	CTexture(){}
@@ -121,6 +125,12 @@ struct CRenderRect : CRectTemplate<s16, s16> {
 		y = p_Y;
 		width = p_W;
 		height = p_H;
+	}
+	CRenderRect(const CRectTemplate<s16, s16> p_Derivative) {
+		x = p_Derivative.x;
+		height = p_Derivative.y;
+		width = p_Derivative.width;
+		height = p_Derivative.height;
 	}
 };
 using CRenderVector = CVectorTemplate<s16>;

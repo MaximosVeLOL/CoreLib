@@ -16,6 +16,8 @@
 #include <core/memory.hpp>
 #include <core/platform.hpp>
 
+#include <functional>
+
 #if CORE_PLATFORM_MODERN
 struct SDL_IOStream;
 #endif
@@ -204,15 +206,26 @@ public:
 	CFile(const char* p_Directory, EOpenMode p_OpenMode = {true, true}) {
 		Open(p_Directory, p_OpenMode);
 	}
-	~CFile() {
-		//Close();
-	}
+	~CFile();
 };
 
 namespace Utility {
-	CORE_API extern bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(const CPath& p_Current));
+	CORE_API extern bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(CPath& p_Current));
 
 	CORE_API extern bool CreateFolder(CPath p_Path);
+
+	CORE_API extern char* OpenFileAndReadAll(CPath p_Path, strsize_t& p_OutSize);
+}
+
+
+namespace Dialog {
+	struct CFilter {
+
+	};
+
+	inline void File(std::function<void(const CPath&)> p_OnSelect, CPath p_DefaultPath = nullptr) {
+
+	}
 }
 
 } //End of filesystem namespace

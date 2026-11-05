@@ -42,6 +42,14 @@ namespace Math {
 	Return Floor(Original p_Value) {
 		return static_cast<Return>(SDL_floor(static_cast<double>(p_Value)));
 	}
+	template<typename Original, typename Return, typename GridT = u8>
+	Return Grid(Original p_Value, GridT p_Grid = (GridT)32, bool p_UseRounding = true) {
+		
+		if (p_UseRounding)
+			return static_cast<Return>(Round<Original, Return>(static_cast<Original>(p_Value / p_Grid)) * p_Grid);
+		return static_cast<Return>(Floor<Original, Return>(static_cast<Original>(p_Value / p_Grid)) * p_Grid);
+
+	}
 
 }
 

@@ -75,6 +75,10 @@ namespace Module {
 		ret->m_Object = o;
 		return ret;
 	}
+
+	IModule::generic_t IModule::FindFunction(const char* p_Name) {
+		return SDL_LoadFunction(m_Object, p_Name);
+	}
 }
 
 CORE_END_NAMESPACE

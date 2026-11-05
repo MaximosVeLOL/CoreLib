@@ -41,6 +41,14 @@ namespace Module {
 		virtual void OnRender() = 0;
 		//Prepares for unloading. Is called when we fail to load.
 		virtual void OnUnload() = 0;
+
+		using generic_t = void(*)();
+		generic_t FindFunction(const char* p_Name);
+
+		template<typename T>
+		T FindFunction(const char* p_Name) {
+			return (T)FindFunction(p_Name);
+		}
 		
 		void Unload();
 	};

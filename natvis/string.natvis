@@ -1,0 +1,9 @@
+<Type Name="cl::CString;">
+    <DisplayString>{{ length={m_Size - 1} }} {string={m_Data}}</DisplayString>
+    <Expand>
+        <ArrayItems>
+            <Size>1</Size>
+            <ValuePointer>m_Data</ValuePointer>
+        </ArrayItems>
+    </Expand>
+</Type>

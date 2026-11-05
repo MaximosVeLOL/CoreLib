@@ -1,0 +1,10 @@
+<Type Name="cl::CList;">
+    <DisplayString>{{ size={_Mylast - _Myfirst} }}</DisplayString>
+    <Expand>
+        <Item Name="[size]" ExcludeView="simple">m_Count</Item>
+        <ArrayItems>
+            <Size>m_Count</Size>
+            <ValuePointer>m_Data</ValuePointer>
+        </ArrayItems>
+    </Expand>
+</Type>

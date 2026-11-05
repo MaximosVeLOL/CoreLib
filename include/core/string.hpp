@@ -28,7 +28,7 @@ namespace String {
 	template<typename... Args>
 	inline char_t* MakeFromFormat(std::format_string<Args...> p_Format, Args&&... p_Args) {
 		std::string f = std::format(p_Format, p_Args...);
-		size_t fSize = f.size();
+		size_t fSize = f.length() + 1;
 		char_t* ret = new char_t[fSize] {'!'};
 		Mem::Copy(f.data(), ret, fSize);
 		return ret;
@@ -91,7 +91,7 @@ public:
 	char* substring(strsize_t p_StartIndex, strsize_t p_EndIndex = STRING_INVALID, bool p_EndIndexIsLength = false) {
 		if (p_EndIndexIsLength) {
 			if (p_EndIndex == STRING_INVALID) {
-				p_EndIndex = (m_Size - 1) - p_StartIndex;
+				p_EndIndex = (m_Size) - p_StartIndex;
 			}
 			if (p_StartIndex + p_EndIndex >= m_Size) {
 				throw Error::CExOutOfBounds();
@@ -104,7 +104,7 @@ public:
 		if (p_EndIndex == STRING_INVALID) {
 			p_EndIndex = m_Size - 1;
 		}
-		strsize_t len = p_EndIndex - p_StartIndex;
+		strsize_t len = (p_EndIndex + 1) - p_StartIndex;
 		if (len == 0) {
 			throw Error::CRuntime("substring length is 0! (start & end = ({}, {}))", p_StartIndex, p_EndIndex);
 		}
@@ -263,23 +263,29 @@ public:
 	char_t& last() {
 		return m_Data[1];
 	}
+	bool is_empty() {
+		return (m_Size == 0);
+	}
 
 	void operator=(char_t* p_String) override {
 		if (m_Data) {
 			delete[] m_Data;
 		}
 		m_Data = p_String;
-		m_Size = String::FindLength(p_String);
+		m_Size = String::FindLength(p_String) + 1;
 	}
 
 	void operator=(const char* p_Data) override {
 		if (m_Data) {
 			delete[] m_Data;
 		}
-		m_Size = String::FindLength(p_Data);
-		m_Data = new char_t[m_Size + 1]{ '!' };
+		m_Size = String::FindLength(p_Data) + 1;
+		m_Data = new char_t[m_Size]{ '!' };
 		Mem::Copy(p_Data, m_Data, m_Size);
-		m_Data[m_Size++] = '\0';
+		//m_Data[m_Size++] = '\0';
+	}
+	bool operator==(nullptr_t p_Nullptr) {
+		return static_cast<bool>(m_Data);
 	}
 	bool operator==(const char* p_Data) {
 		return String::Compare(m_Data, p_Data);
@@ -324,6 +330,13 @@ public:
 		m_IsConst = false;
 		operator=(p_String);
 	}
+	void destroy() {
+		if (!m_Data || m_Data[0] == -35)
+			return;
+		delete[] m_Data;
+		m_Data = nullptr;
+		m_Size = 0;
+	}
 
 
 	template<typename... Args>
@@ -339,9 +352,7 @@ public:
 	}
 
 	~CString() {
-		//delete[] m_Data;
-		//m_Data = nullptr;
-		//m_Size = 0;
+		//destroy();
 	}
 
 	operator char_t* () {

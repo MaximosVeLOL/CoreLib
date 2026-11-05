@@ -1,1 +1,5 @@
-string test = "Hello!";
+struct Object {
+		u8 width = 0;
+		u8 height = 0;
+		string image = "!invalid!";
+};
