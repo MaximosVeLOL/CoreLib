@@ -5,11 +5,9 @@
 //This is meant for external connections with another application, but removes the need for DLL functions and all that complicated stuff.
 
 
-#include <core/libapi.hpp>
-
-
-#include <core/platform.hpp>
-#include <core/options.hpp>
+#include <core/libapi.hpp>		//good
+#include <core/platform.hpp>	//good (possible)
+#include <core/options.hpp>		//good (possible)
 
 #if CO_FS_FIXEDCODE == 0
 #if CORE_PLATFORM_MODERN
@@ -56,9 +54,11 @@ namespace Module {
 	extern CORE_API IModule* Load(const char* p_Name);
 }
 
-#define CORE_MODULE_CREATE_ACCESS(name, className) extern "C" __declspec(dllexport) Module::IModule* CoreModule_Get##name##() {return new className();}
 
 CORE_END_NAMESPACE
+
+
+#define CORE_MODULE_CREATE_ACCESS(name, className) extern "C" __declspec(dllexport) className* CoreModule_Get##name##() {return new className();}
 
 
 #endif

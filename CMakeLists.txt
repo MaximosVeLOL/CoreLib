@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(USE_SDL OFF)
 
-set(CORE_USE_SCRIPTS OFF)
+set(CORE_USE_SCRIPTS ON)
 
 set(CORE_TESTING OFF)
 
@@ -45,7 +45,7 @@ endif()
 if(CORE_TESTING)
 	add_executable (CoreLib "source/comp/input.cpp" "source/comp/renderer.cpp" "source/memory.cpp" "source/comp/asset.cpp")
 else()
-	add_library (CoreLib SHARED "source/comp/input.cpp" "source/comp/renderer.cpp" "source/memory.cpp" "source/comp/asset.cpp" "source/string.cpp" "source/utility.cpp" "source/filesystem.cpp" "source/module.cpp" "natvis/string.natvis" "natvis/list.natvis" "source/sharedlib.cpp")
+	add_library (CoreLib SHARED "source/comp/input.cpp" "source/comp/renderer.cpp" "source/memory.cpp" "source/comp/asset.cpp" "source/string.cpp" "source/utility.cpp" "source/filesystem.cpp" "source/module.cpp" "natvis/string.natvis" "natvis/list.natvis"  "source/comp/network.cpp" "source/game/scripting.cpp" "source/tests.cpp")
 endif()
 if(CORE_USE_SCRIPTS)
 	add_subdirectory(vendored/angelscript/projects/cmake)

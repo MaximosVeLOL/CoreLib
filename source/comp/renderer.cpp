@@ -53,7 +53,7 @@ namespace Renderer {
 			return false;
 		}
 		g_HasFontEngine = TTF_Init(); 
-		FileSystem::CFile fontFile("fonts/default.ttf");
+		fs::CFile fontFile("fonts/default.ttf");
 		if (fontFile.IsOpen()) {
 			g_DefaultFont = TTF_OpenFontIO(fontFile.GetStream(), false, 12.0f);
 			if (!g_DefaultFont) {
@@ -120,12 +120,21 @@ namespace Render {
 		SDL_RenderTexture(Renderer::g_Renderer, t, &part, &renderPos);
 	}
 	Renderer::CTexture CreateTextureFromText(const char* p_Text, unsigned __int16 p_Length, Renderer::CColor p_Foreground, Renderer::CColor p_Background) {
+		auto error = [&p_Length]() -> Renderer::CTexture {
+			LogError("Failed to create texture from text! (No font engine) Replacing with red rect data...");
+			SDL_Surface* e = SDL_CreateSurface(p_Length * 16, 16, SDL_PIXELFORMAT_RGBA8888);
+			SDL_FillSurfaceRect(e, NULL, 0xFF0000FF);
+			SDL_Texture* t = SDL_CreateTextureFromSurface(Renderer::g_Renderer, e);
+			SDL_DestroySurface(e);
+			return Renderer::CTexture{ t };
+			};
+		
 		if (!g_HasFontEngine) {
-			return Renderer::CTexture{ nullptr };
+			return error();
 		}
 		SDL_Surface* s = TTF_RenderText_Blended_Wrapped(g_DefaultFont, p_Text, p_Length, p_Foreground, 0);
 		if (!s) {
-			return Renderer::CTexture{ nullptr };
+			return error();
 		}
 		SDL_Texture* t = SDL_CreateTextureFromSurface(Renderer::g_Renderer, s);
 		SDL_DestroySurface(s);
@@ -133,11 +142,14 @@ namespace Render {
 	}
 	void Text(Renderer::CRenderVector p_Position, const char* p_Text, unsigned __int16 p_Length, Renderer::CColor p_Foreground, Renderer::CColor p_Background) {
 		Renderer::CTexture t = CreateTextureFromText(p_Text, p_Length, p_Foreground, p_Background);
+		if (!t.IsValid())
+			throw Error::CRuntime("Texture is invalid when not supposed to!");
 		Render::Texture(t, Renderer::CRenderRect{ p_Position.x, p_Position.y, t.GetWidth<s16>(), t.GetHeight<s16>() });
 		t.Destroy();
 	}
 	void Text(Renderer::CRenderVector p_Position, CString p_String, Renderer::CColor p_Foreground, Renderer::CColor p_Background) {
-		Text(p_Position, p_String.data_safe(), p_String.size(), p_Foreground, p_Background);
+		Text(p_Position, p_String.data(), p_String.size(), p_Foreground, p_Background);
+		p_String.destroy();
 	}
 }
 

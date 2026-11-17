@@ -3,3 +3,4 @@ struct Object {
 		u8 height = 0;
 		string image = "!invalid!";
 };
+Object oPlayer = {64, 64, default};

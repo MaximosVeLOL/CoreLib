@@ -16,7 +16,8 @@
 * Use the Render namespace to actually render things to the screen
 
 */
-#if 1
+
+#if CORE_PLATFORM_MODERN
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Color;
@@ -38,11 +39,11 @@ inline const char* APP_NAME = "Application";
 CORE_API extern SDL_Window* g_Window;
 CORE_API extern SDL_Renderer* g_Renderer;
 
-COMPONENT_DECLARE_INIT();
+CORE_API COMPONENT_DECLARE_INIT();
 
 //COMPONENT_DECLARE_UPDATE();
 
-COMPONENT_DECLARE_UNLOAD();
+CORE_API COMPONENT_DECLARE_UNLOAD();
 /*
 struct CFloatColor {
 	float r = 0;
@@ -65,7 +66,7 @@ struct CColor {
 	u8 g = 0;
 	u8 b = 0;
 	u8 a = 0;
-#if CORE_PLATFORM == PLATFORM_SDLSUPPORTED
+#if CORE_PLATFORM_MODERN
 	operator SDL_Color();
 	//operator CFloatColor() {
 	//	return CFloatColor{ static_cast<float>(r / 255), static_cast<float>(g / 255), static_cast<float>(b / 255), static_cast<float>(a / 255) };

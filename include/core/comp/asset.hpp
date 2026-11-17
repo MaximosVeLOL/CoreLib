@@ -61,16 +61,16 @@ struct CORE_API CReference {
 };
 
 
-extern CORE_API CReference Request(FileSystem::CPath p_Path, ILoader* p_Loader);
+extern CORE_API CReference Request(fs::CPath p_Path, ILoader* p_Loader);
 
 extern CORE_API void Unload(const CReference& p_Ref);
 
 extern CORE_API void(*g_OnInit)();
 
 
-COMPONENT_DECLARE_INIT();
+CORE_API COMPONENT_DECLARE_INIT();
 
-COMPONENT_DECLARE_UNLOAD();
+CORE_API COMPONENT_DECLARE_UNLOAD();
 
 COMPONENT_DEFINE_END
 

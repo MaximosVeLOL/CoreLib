@@ -22,22 +22,20 @@ namespace Module {
 		constexpr bool CE_useCurrentPath = true;
 		CString pathString;
 		if (CE_useCurrentPath) {
-			pathString += FileSystem::CPath::GetCurrentDirectory();
-			pathString += '\\';
+			pathString = fs::CPath::GetCurrentDirectory();
+			if (pathString.last() != '\\')
+				pathString += '\\';
 			pathString += p_Name;
-
 		}
 		else {
-
-			CString pathString = "dev/tools/";
-			pathString += p_Name;
+			pathString = CString("dev/tools/", p_Name);
 		}
-#ifdef WIN32 //Will the other option ever be available? No. But it is good to support other platforms pre-maturely
+#ifdef WIN32 //Will the other option ever be available? No. But it is good to support other platforms early
 		pathString += ".dll";
 #else
 		pathString += ".so";
 #endif
-		FileSystem::CPath theRealPath(pathString);
+		fs::CPath theRealPath(pathString.data());
 		char_t* realPath = theRealPath.AsRealPath();
 #if CO_FS_FIXEDCODE
 #else
@@ -47,7 +45,7 @@ namespace Module {
 		SDL_SharedObject* o = SDL_LoadObject(realPath);
 		if (!o) {
 			//const char_t* stupidHack = pathString.data();
-			//LogError("(Module::Load) Failed to load module in path ({}!}", "todo");
+			//LogError("(Module::Load) Failed to load module in path ({}!}", (CString&)pathString);
 			delete[] realPath;
 			return nullptr;
 		}

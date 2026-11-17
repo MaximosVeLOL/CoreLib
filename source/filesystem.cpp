@@ -3,17 +3,17 @@
 #include <string>
 #include <SDL3/SDL.h>
 
-namespace fs = std::filesystem;
+namespace stdfs = std::filesystem;
 
 CORE_DECLARE_NAMESPACE
 
-namespace FileSystem {
+namespace fs {
 
 #pragma region CPath
-	strsize_t CPath::_find(char p_Target) {
+	strlen_t CPath::_find(char p_Target) {
 		for (s32 i = static_cast<s32>(m_Length); i >= 0;i--) {
 			if (m_Path[i] == p_Target)
-				return static_cast<strsize_t>(i);
+				return static_cast<strlen_t>(i);
 		}
 		return STRING_INVALID;
 	}
@@ -40,7 +40,7 @@ namespace FileSystem {
 		return (i.type == SDL_PATHTYPE_FILE);
 		/*
 		//This looks for files with extensions, which is very common, but some only have names.
-		strsize_t extIndex = _find('.');
+		strlen_t extIndex = _find('.');
 		if (extIndex == STRING_INVALID) {
 			return false;
 		}
@@ -146,8 +146,8 @@ namespace FileSystem {
 				throw Error::CRuntime("asd");
 			}
 			try {
-				for (const fs::directory_entry& e : fs::directory_iterator(asRaw)) {
-					fs::path path = e;
+				for (const stdfs::directory_entry& e : stdfs::directory_iterator(asRaw)) {
+					stdfs::path path = e;
 					std::string asString = path.string();
 					CPath cur(asString.data());
 					p_Iterator(cur);
@@ -172,9 +172,9 @@ namespace FileSystem {
 #endif
 			return true;
 		}
-		char* OpenFileAndReadAll(CPath p_Path, strsize_t& p_OutSize) {
+		char* OpenFileAndReadAll(CPath p_Path, strlen_t& p_OutSize) {
 			char* asReal = p_Path.AsRealPath();
-			FileSystem::CFile file(asReal);
+			CFile file(asReal);
 			if (!file.IsOpen()) {
 				delete[] asReal;
 				return nullptr;

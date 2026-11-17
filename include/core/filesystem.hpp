@@ -24,31 +24,31 @@ struct SDL_IOStream;
 
 CORE_DECLARE_NAMESPACE
 
-namespace FileSystem {
+namespace fs {
 	//A path, can be a asset directory path or a real (binary) directory.
 	//This should only be used when you need basic utilities or don't know
 	//The type a path is.
 	class CORE_API CPath {
 	private:
-		strsize_t _find(char p_Target);
+		strlen_t _find(char p_Target);
 		/*
-		strsize_t _getExtensionIndex() {
+		strlen_t _getExtensionIndex() {
 			//A regular file can be this: "./.gitignore"
 			//So we have to go from the end to the start to solve for the extension
 			//The extension is also the last dot at the end, so that makes even more sense
 
 		}
-		strsize_t _getParentFolderIndex() {
+		strlen_t _getParentFolderIndex() {
 			for (s32 i = static_cast<s32>(m_Length); i >= 0;i--) {
 				if (m_Path[i] == '/') {
-					return static_cast<strsize_t>(i);
+					return static_cast<strlen_t>(i);
 				}
 			}
 		}
 		*/
 	public:
 		const char* m_Path = nullptr;
-		strsize_t m_Length = 0;
+		strlen_t m_Length = 0;
 
 		static char* GetCurrentDirectory();
 
@@ -56,26 +56,26 @@ namespace FileSystem {
 
 
 		const char* ParentFolder() {
-			strsize_t folderIndex = _find('/');
+			strlen_t folderIndex = _find('/');
 			if (folderIndex == STRING_INVALID) folderIndex = _find('\\');
 			if (folderIndex == STRING_INVALID) return nullptr;
 			return static_cast<const char*>(m_Path + folderIndex);
 		}
 
 		const char* Extension() {
-			strsize_t extIndex = _find('.');
+			strlen_t extIndex = _find('.');
 			if (extIndex == STRING_INVALID) return nullptr;
 			return static_cast<const char*>(m_Path + extIndex);
 		}
 		char* FileName() {
-			strsize_t parentFolder = _find('/');
+			strlen_t parentFolder = _find('/');
 			//If there is no folder "name.ext", then assume the filename starts at 0
 			if (parentFolder == STRING_INVALID) parentFolder = 0;
-			strsize_t extIndex = _find('.');
+			strlen_t extIndex = _find('.');
 			//Assume the path is "filename"
 			if (extIndex == STRING_INVALID) extIndex = m_Length;
 			char* ret = new char[(extIndex - parentFolder) + 1] {'\0'};
-			for (strsize_t i = parentFolder + 1; i < extIndex;i++) {
+			for (strlen_t i = parentFolder + 1; i < extIndex;i++) {
 				ret[i - (parentFolder + 1)] = m_Path[i];
 			}
 			return ret;
@@ -97,14 +97,14 @@ namespace FileSystem {
 			if (IsRealPath()) {
 				//Just a little hack here!
 				char* ret = new char[m_Length + 1] {'\0'};
-				Mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
+				mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
 				return ret; 
 			}
 
 			const char* baseDir = GetBaseDirectory();
-			strsize_t baseDirLen = String::FindLength(baseDir);
+			strlen_t baseDirLen = String::FindLength(baseDir);
 			char* ret = new char[baseDirLen + m_Length + 8 + 1] {'\0'};
-			strsize_t i = 0;
+			strlen_t i = 0;
 			for (; i < baseDirLen;i++) {
 				ret[i] = baseDir[i];
 			}
@@ -126,14 +126,14 @@ namespace FileSystem {
 			if (IsGameAssetPath()) {
 				//Just a little hack here! (x2)
 				char* ret = new char[m_Length + 1] {'\0'};
-				Mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
+				mem::Copy(static_cast<const void*>(m_Path), ret, m_Length);
 				return ret;
 			}
 			throw("Implement!");
-			strsize_t baseIndex = 0;
+			strlen_t baseIndex = 0;
 			const char* baseDir = GetBaseDirectory();
-			strsize_t len = String::FindLength(baseDir);
-			for (strsize_t i = 0; i < m_Length;i++) {
+			strlen_t len = String::FindLength(baseDir);
+			for (strlen_t i = 0; i < m_Length;i++) {
 				if (m_Path[i] == baseDir[baseIndex]) {
 					if (++baseIndex >= len) {
 						//We found the beginning index!
@@ -212,13 +212,16 @@ public:
 namespace Utility {
 	CORE_API extern bool DirectoryIterator(CPath p_Path, void(*p_Iterator)(CPath& p_Current));
 
-	CORE_API extern bool CreateFolder(CPath p_Path);
 
-	CORE_API extern char* OpenFileAndReadAll(CPath p_Path, strsize_t& p_OutSize);
+	CORE_API extern bool CreateFolder(CPath p_Path);
+#if CORE_PLATFORM_MODERN
+	CORE_API extern char* OpenFileAndReadAll(CPath p_Path, strlen_t& p_OutSize);
+#endif
 }
 
 
 namespace Dialog {
+#if CORE_PLATFORM_DESKTOP
 	struct CFilter {
 
 	};
@@ -226,6 +229,7 @@ namespace Dialog {
 	inline void File(std::function<void(const CPath&)> p_OnSelect, CPath p_DefaultPath = nullptr) {
 
 	}
+#endif
 }
 
 } //End of filesystem namespace

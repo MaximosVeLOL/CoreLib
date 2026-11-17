@@ -30,22 +30,25 @@
 
 #define COMPONENT_DEFINE_START(name, isUsed) constexpr bool COMPONENT_##name##_USED = isUsed; namespace name {
 
-#define COMPONENT_DECLARE_INIT CORE_API extern cl::u8 Init
+#define COMPONENT_DECLARE_INIT extern cl::u8 Init
 #define COMPONENT_IMPLEMENT_INIT cl::u8 Init
 
-#define COMPONENT_DECLARE_UPDATE CORE_API extern void Update
+#define COMPONENT_DECLARE_UPDATE extern void Update
 #define COMPONENT_IMPLEMENT_UPDATE void Update
 
-#define COMPONENT_DECLARE_UNLOAD CORE_API extern void Unload
+#define COMPONENT_DECLARE_UNLOAD extern void Unload
 #define COMPONENT_IMPLEMENT_UNLOAD void Unload
 
 #define COMPONENT_DEFINE_END }
 
 
 //#define COMPONENT_CALL_INIT(name) cl::name::Init()
-#define COMPONENT_CALL_INIT(name, onFail) if(!name::Init()) onFail
-#define COMPONENT_CALL_INIT_NOFAIL(name) name::Init()
-#define COMPONENT_CALL_UPDATE(name) name::Update()
-#define COMPONENT_CALL_UNLOAD(name) name::Unload()
+
+#define COMPONENT_IF_USED(name) if constexpr(COMPONENT_##name##_USED)
+
+#define COMPONENT_CALL_INIT(name, onFail) COMPONENT_IF_USED(name) {if(!name::Init()) onFail }
+#define COMPONENT_CALL_INIT_NOFAIL(name) COMPONENT_IF_USED(name) name::Init()
+#define COMPONENT_CALL_UPDATE(name) COMPONENT_IF_USED(name) name::Update()
+#define COMPONENT_CALL_UNLOAD(name) COMPONENT_IF_USED(name) name::Unload()
 
 #endif

@@ -66,7 +66,7 @@ namespace Asset {
 
 
 
-	CReference Request(FileSystem::CPath p_Path, ILoader* p_Loader) {
+	CReference Request(fs::CPath p_Path, ILoader* p_Loader) {
 		char* gamePath = p_Path.AsGamePath();
 		if (g_LoadedAssetsCount > 0) {
 			u16 hash = String::GetHash<u16>(gamePath);
@@ -81,7 +81,7 @@ namespace Asset {
 			LogError("(Asset::Request) Asset limit exceeded!");
 			return CReference();
 		}
-		FileSystem::CFile *f = new FileSystem::CFile(gamePath);
+		fs::CFile *f = new fs::CFile(gamePath);
 		
 		if (!f->IsOpen()) {
 			LogWarning("(Asset::Request) Failed to load asset! (filesystem error!, failed to open dir ({}))", gamePath);
@@ -98,7 +98,7 @@ namespace Asset {
 		curAsset->m_Hash = String::GetHash<u16>(gamePath);
 		curAsset->m_Loader = p_Loader;
 #if CO_O_MULTI_THREADING
-		std::thread t([p_Loader, curAsset, f]() -> void {
+		std::thread t([&p_Loader, &curAsset, &f]() -> void {
 			p_Loader->Load(curAsset, *f);
 			f->Close();
 			delete f;

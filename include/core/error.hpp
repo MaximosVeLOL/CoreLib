@@ -24,6 +24,10 @@ namespace Error {
 	public:
 		CExUnknown() : CRuntime("An unknown error has occured.") {}
 	};
+	class CSystem : public CRuntime {
+	public:
+		CSystem() : CRuntime("An error with the system has occured.") {}
+	};
 }
 
 

@@ -14,7 +14,7 @@
 
 CORE_DECLARE_NAMESPACE
 
-namespace FileSystem {
+namespace fs {
 	struct CFile;
 }
 
@@ -100,8 +100,8 @@ public:
 		return m_Data + m_Count;
 	}
 
-	virtual void Import(FileSystem::CFile& p_File) = 0;
-	virtual void Export(FileSystem::CFile& p_File) = 0;
+	virtual void Import(fs::CFile& p_File) = 0;
+	virtual void Export(fs::CFile& p_File) = 0;
 };
 
 //A simple region! Only use this when you have an array that has constant value. Basically, don't put pointers in here!
@@ -120,8 +120,8 @@ public:
 
 	bool OnEvent(ERegionEvent p_Type, Type* p_Element) override = 0;
 	void Clear() override = 0;
-	void Import(FileSystem::CFile& p_File) override = 0;
-	void Export(FileSystem::CFile& p_File) override = 0;
+	void Import(fs::CFile& p_File) override = 0;
+	void Export(fs::CFile& p_File) override = 0;
 
 };
 //A pointer region! Use this when you have arrays, or pointers to data in an array. So, GameObject*[], and other stuff like that.
@@ -164,8 +164,8 @@ public:
 
 	bool OnEvent(ERegionEvent p_Type, Type* p_Element) override = 0;
 	void Clear() override = 0;
-	void Import(FileSystem::CFile& p_File) override = 0;
-	void Export(FileSystem::CFile& p_File) override = 0;
+	void Import(fs::CFile& p_File) override = 0;
+	void Export(fs::CFile& p_File) override = 0;
 
 };
 

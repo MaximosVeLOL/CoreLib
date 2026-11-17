@@ -122,11 +122,11 @@ CORE_API extern void ResetAllStates();
 
 CORE_API extern void SetTextInputState(bool p_State, std::function<void(const char*)> p_OnInputEvent = nullptr);
 
-COMPONENT_DECLARE_INIT();
+CORE_API COMPONENT_DECLARE_INIT();
 
-COMPONENT_DECLARE_UPDATE();
+CORE_API COMPONENT_DECLARE_UPDATE();
 
-COMPONENT_DECLARE_UNLOAD();
+CORE_API COMPONENT_DECLARE_UNLOAD();
 
 COMPONENT_DEFINE_END
 

@@ -5,7 +5,7 @@
 #if CO_G_SCRIPTING
 
 #include <core/libapi.hpp>
-#include <angelscript/include/angelscript.h>
+
 #include <core/comp/base.hpp>
 #include <core/types.hpp>
 #include <core/string.hpp>
@@ -38,7 +38,7 @@ class CAngelScript : public IScriptBase {
 
 };
 
-class CMaxPlusPLus : public IScriptBase {
+class CMaxScript : public IScriptBase {
 
 };
 

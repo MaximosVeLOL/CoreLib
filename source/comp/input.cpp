@@ -6,7 +6,7 @@
 //For Renderer::g_Window
 #include <core/comp/renderer.hpp>
 
-CORE_LOGGER_CREATE(Input)
+CORE_LOGGER_CREATE(Input, 7)
 
 CORE_DECLARE_NAMESPACE
 
@@ -27,7 +27,7 @@ namespace Input {
 	CList<CKeyEvent> g_OnKeyDownEvents;
 
 	COMPONENT_IMPLEMENT_INIT() {
-		FileSystem::CFile file("sys/INPUTS");
+		fs::CFile file("sys/INPUTS");
 		if (!file.IsOpen()) {
 			LogWarning("(Input Component) Failed to open sys/INPUTS! Issues may occur now!");
 			return false;

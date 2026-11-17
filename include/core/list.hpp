@@ -7,7 +7,14 @@
 #include <core/error.hpp>
 #include <core/types.hpp>
 
+#include <initializer_list>
+
 CORE_DECLARE_NAMESPACE
+
+#define CORE_LIST_USEOLD 1
+
+
+#if CORE_LIST_USEOLD
 
 template<typename Type, typename Count = unsigned __int16>
 class CList {
@@ -17,7 +24,7 @@ protected:
 	Count _getMaxCount() {
 		return std::numeric_limits<Count>::max();
 	}
-	
+
 	Count m_Count = 0;
 	Type* m_Data = nullptr;
 
@@ -34,6 +41,7 @@ protected:
 		return (p_Index < 0 || p_Index >= static_cast<s64>(m_Count));
 	}
 
+
 	virtual void _extend(unsigned __int8 p_ElementCount, Type* p_NewElements = nullptr) {
 		if (static_cast<size_t>(static_cast<size_t>(m_Count) + p_ElementCount) >= _getMaxCount()) {
 			throw("Exceeded type (Count) limit!");
@@ -48,7 +56,7 @@ protected:
 		for (; i < m_Count;i++) {
 			output[i] = m_Data[i];
 		}
-		if(p_ElementCount == 1) {
+		if (p_ElementCount == 1) {
 			output[i] = *p_NewElements;
 		}
 		else {
@@ -129,14 +137,14 @@ public:
 	Count length() {
 		return m_Count;
 	}
-	bool is_null() {
-		return (static_cast<bool>(m_Data));
+	bool is_empty() {
+		return (static_cast<bool>(!m_Data));
 	}
 
 	//Returns a copy of the list's data
 	Type* data() {
 		Type* ret = new Type[m_Count]{ Type() };
-		Mem::Copy(m_Data, ret, m_Count * sizeof(Type));
+		mem::Copy(m_Data, ret, m_Count * sizeof(Type));
 		return ret;
 	}
 	//Returns a raw
@@ -192,5 +200,103 @@ public:
 };
 
 CORE_END_NAMESPACE
+
+#else
+
+#define CORE_LIST_USETYPES 0
+
+
+template<typename Type, typename Length = u16, typename Increase = u8, typename Change = s8>
+class CList {
+private:
+	void* m_Data = nullptr; //constant 8
+	Length m_Length = 0; //ranges from 1 to 8 bytes
+	//u8 m_Changes = 0;
+
+public:
+
+	Length size() {
+		return m_Length;
+	}
+	Length length() {
+		return m_Length;
+	}
+
+	void push(Type&& p_Element) {
+		if (!m_Data) {
+			//m_Data = mem::Allocate(sizeof(Type));
+			Type* output = new Type[1]{ Type() };
+			if (!output) {
+				throw Error::CSystem();
+			}
+			output[0] = p_Element;
+			//mem::Copy(&p_Element, m_Data, sizeof(Type));
+			m_Data = output;
+			m_Length = 1;
+			return;
+		}
+		//void* output = mem::Allocate(sizeof(Type) * (m_Length + 1));
+		m_Data = mem::Reallocate(m_Data, sizeof(Type) * (m_Length + 1));
+		if (!m_Data)
+			throw Error::CSystem();
+
+		static_cast<Type*>(m_Data)[m_Length] = p_Element;
+		//delete m_Data;
+		m_Length++;
+	}
+	void push(Type& p_Element) {
+		push(static_cast<Type&&>(p_Element));
+	}
+
+
+	Type& at(Length p_Index) {
+		return static_cast<Type&>(data()[p_Index]);
+	}
+	Type& operator[](Length p_Index) {
+		return at(p_Index);
+	}
+	Type& first() {
+		return at(0);
+	}
+	Type& last() {
+		return at(m_Length - 1);
+	}
+
+	Type* data() {
+		return static_cast<Type*>(m_Data);
+	}
+
+	void push() {
+
+	}
+
+	Type* begin() {
+		return data();
+	}
+	Type* end() {
+		return (data() + m_Length);
+	}
+
+	bool operator==(Type*&& p_Other) {
+		//If the lengths dont match
+		if( (sizeof(p_Other) / sizeof(Type)) != m_Length)
+			return false;
+		//Compare each element
+		for (Length i = 0; i < m_Length;i++) {
+			if (data()[i] != p_Other[i])
+				return false;
+		}
+		return true;
+	}
+
+	bool is_empty() {
+		return static_cast<bool>(m_Data);
+	}
+
+};
+
+CORE_END_NAMESPACE
+
+#endif
 
 #endif

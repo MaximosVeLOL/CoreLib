@@ -1,6 +1,10 @@
 #ifndef __OPTIONS_H__
 #define __OPTIONS_H__
 
+//Debugging utils
+#define CO_D_NOOPTI 1
+
+
 //Optimizations
 #define CO_O_BADCPU 0
 #define CO_O_LOWMEM 0

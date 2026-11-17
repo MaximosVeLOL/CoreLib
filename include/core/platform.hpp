@@ -18,7 +18,17 @@ enum EPlatform : unsigned __int8 {
 	PLATFORM_UNKNOWN
 }; 
 
-#if defined(WIN32) || defined(__APPLE__) && defined(__MACH__) || defined( __linux__) || defined(__MINGW64__)
+#define CORE_PLATFORM_MANUALOVERRIDE 0
+
+//Manual override stuff goes here
+#if CORE_PLATFORM_MANUALOVERRIDE
+
+#define CORE_PLATFORM PLATFORM_PSX
+#define CORE_PLATFORM_MODERN 0
+
+#else
+
+#if defined(_WIN32) || defined(__APPLE__) && defined(__MACH__) || defined( __linux__) || defined(__MINGW64__)
 
 #define CORE_PLATFORM_DESKTOP 1
 
@@ -33,6 +43,8 @@ enum EPlatform : unsigned __int8 {
 #else
 
 #define CORE_PLATFORM PLATFORM_UNKNOWN
+
+#endif
 
 #endif
 

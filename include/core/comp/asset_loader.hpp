@@ -12,7 +12,7 @@ namespace Asset {
 	struct ILoader {
 		void* m_DefaultData = nullptr;
 		virtual void Initialize() = 0;
-		virtual void Load(CAsset* p_Asset, FileSystem::CFile& p_File) = 0;
+		virtual void Load(CAsset* p_Asset, fs::CFile& p_File) = 0;
 		virtual void Unload(CAsset* p_Asset) = 0;
 	};
 #pragma pack(pop)
